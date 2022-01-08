@@ -1,0 +1,5 @@
+# Use python version <=3.9.9 
+# python >=3.10 will crash
+flask
+Flask-JWT
+werkzeug
