@@ -23,7 +23,7 @@ db = SQLAlchemy(app)
 #         self.email = email
 class lichtan(db.Model):
     _id = db.Column("id", db.Integer, primary_key=True)
-    licht = db.Column("licht", db.Integer)
+    licht = db.Column("licht", db.String)
     def __init__(self, licht):
         self.licht = licht
 
@@ -33,6 +33,31 @@ class licht(db.Model):
 
     def __init__(self, zeit):
         self.zeit = zeit
+
+# @app.route("/wecker", methods=["POST", "GET"])
+# def lighton():
+#     if request.method == "POST":
+#         session.permanent = True
+#         light = request.form["lichtschalter"]
+#         session["licht"] = light
+#         found_wecker = lichtan.query.filter_by(licht=licht).first()
+#         if light == lighton :
+#             session["licht"]=1
+#         # else:
+#         #     zeitpunkt = lichtan(licht)
+#         #     db.session.add(zeitpunkt)
+#         #     db.session.commit()
+
+
+#         flash("Das Licht wurde erfolgreich eingeschalten!")
+#         return redirect(url_for("weckeranzeige"))
+#     else:
+#         # if "zeit" in session: 
+#         #     flash("Der Wecker war bereits gestellt!")
+#         #     return redirect(url_for("weckeranzeige"))
+#         return render_template("wecker.html")
+
+
 @app.route("/licht", methods=["POST", "GET"])
 def lichtein():
       if request.method == "POST":
@@ -43,7 +68,7 @@ def lichtein():
         if lichtein:
             session["licht"] =lichtein.licht
         else:
-            light = lichtan(licht)
+            light = lichtan(light)
             db.session.add(light)
             db.session.commit()
 
@@ -51,15 +76,16 @@ def lichtein():
         flash("Licht ist an!")
         return redirect(url_for("lichtein"))
       else:
-        if "licht" in session: 
-            flash("Licht ist bereits an!")
-            return redirect(url_for("weckerstellen"))
+        # if "licht" in session: 
+        #     flash("Licht ist bereits an!")
+        #     return redirect(url_for("weckerstellen"))
         return render_template("licht.html")
 
 @app.route("/wecker", methods=["POST", "GET"])
 def weckerstellen():
     if request.method == "POST":
         session.permanent = True
+        request.form["wecker"] == "weckerstellen"
         zeit = request.form["wecker"]
         session["zeit"] = zeit
         found_wecker = licht.query.filter_by(zeit=zeit).first()
@@ -78,27 +104,7 @@ def weckerstellen():
         #     flash("Der Wecker war bereits gestellt!")
         #     return redirect(url_for("weckeranzeige"))
         return render_template("wecker.html")
-def lichtein():
-      if request.method == "POST":
-        session.permanent = True
-        licht = request.form["licht"]
-        session["licht"] = licht
-        lichtein = lichtan.query.filter_by(licht=licht).first()
-        if lichtein:
-            session["licht"] =lichtein.licht
-        else:
-            light = lichtan(licht)
-            db.session.add(light)
-            db.session.commit()
 
-
-        flash("Licht ist an!")
-        return redirect(url_for("lichtein"))
-      else:
-        if "licht" in session: 
-            flash("Licht ist bereits an!")
-            return redirect(url_for("weckerstellen"))
-        return render_template("licht.html")
 @app.route("/anzeige")
 def weckeranzeige():
   
