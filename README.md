@@ -48,3 +48,8 @@ Install the dependencies:
 ```bash
 pip install flask
 pip install SQLAlchemy
+```
+Start the Website:
+```bash
+python "app.py"
+```
