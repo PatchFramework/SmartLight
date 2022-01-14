@@ -42,3 +42,9 @@ Start the server:
 python backend/server.py
 ```
 This should start the server and create the files ```.secret``` and ```secret_clear.txt``` the server will use those as a store for the server password.
+
+##Website
+Install the dependencies:
+'''bash
+pip install flask
+pip install SQLAlchemy
