@@ -3,3 +3,4 @@
 flask
 Flask-JWT
 werkzeug
+Flask-SQLAlchemy

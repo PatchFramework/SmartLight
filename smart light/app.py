@@ -58,6 +58,11 @@ class licht(db.Model):
 #         return render_template("wecker.html")
 
 
+# redirect to the licht endpoint by default
+@app.route("/", methods=["POST", "GET"])
+def home():
+    return redirect("/licht")
+
 @app.route("/licht", methods=["POST", "GET"])
 def lichtein():
       if request.method == "POST":
