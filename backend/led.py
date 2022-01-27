@@ -11,7 +11,7 @@ class LED():
         # The GPIO pins in the order of Red, Green, Blue
         self.pins = [R_pin, G_pin, B_pin]
         # how much each color is weighted; is used to create colors
-        self.color_weights = [1, 1, 1]
+        self.color_weights = [1.0, 1.0, 1.0]
         # configured pins after PWM
         self.conf_pins = []
         # frequency for pulse-width modulation
@@ -29,8 +29,9 @@ class LED():
         # configure all pins as output pins and set PWM frequency
         for idx in range(len(self.pins)):
             GPIO.setup(self.pins[idx], GPIO.OUT)
+            # configure each pin with the PWM frequency and save it in the conf_pins list
             self.conf_pins.append(GPIO.PWM(self.pins[idx], self.f_pwm))
-            # start PWM
+            # start PWM configured pins
             self.conf_pins[idx].start(0)
     
     def set_duty_cycle(self, duty):
@@ -40,7 +41,8 @@ class LED():
         """
         for idx in range(len(self.pins)):
             # multiply R,G,B with their weights to produce different colors
-            weighted_duty = round(self.color_weights[idx]*duty)
+            weighted_duty = self.color_weights[idx]*duty
+            print(f"duty is {duty}, weight is {self.color_weights[idx]} weighted duty is:", weighted_duty)
             self.conf_pins[idx].ChangeDutyCycle(weighted_duty)
     
     def clip(self, var, lower, upper):
@@ -114,8 +116,12 @@ class LED():
         rgb_weights can either be a list/tuple of three percentage values [0, 1]
         or a list/tuple of three rgb values [0, 255]
         """
-        # if all values in rgb_weighs are integers
-        if isinstance(all(rgb_weights), int) and len(rgb_weights) == 3:
+        if len(rgb_weights) != 3:
+            print(f"Please provide 3 color values r,g,b you have only provided {len(rgb_weights)}")
+            return
+
+        # if all values in rgb_weighs match one value in range 0, 255
+        if ( all( isinstance(w, int) for w in rgb_weights ) ):
             # this means the values are in range [0, 255]
             # we need to convert them to percentage values
             for idx in range(len(rgb_weights)):
@@ -125,31 +131,29 @@ class LED():
                 self.color_weights[idx] = weight
         
         # if all values in rgb_weights are floats
-        elif isinstance(all(rgb_weights), float) and len(rgb_weights) == 3:
+        elif all( isinstance(w, float) for w in rgb_weights ):
             # this means the values are in range [0.0, 1.0]
             # they don't have to be converted
             for idx in range(len(rgb_weights)):
                 # make sure values are valid
                 weight = self.clip(rgb_weights[idx], 0.0, 1.0)
+                print(f"Setting color with id '{idx}' to weight '{weight}'")
                 self.color_weights[idx] = weight
 
 
 if __name__ == "__main__":
-    try:
-        # initialize pin GPIO numbers
-        # define the used pins for the light bulbs
-        rgb_pins = (17, 22, 24) 
 
-        pwm_frequency = 50 # in Hz
+    # initialize pin GPIO numbers
+    # define the used pins for the light bulbs
+    rgb_pins = (17, 22, 24) 
 
-        led = LED(*rgb_pins, pwm_frequency)    
+    pwm_frequency = 50 # in Hz
 
-        led.setup()
-        led.set_color([0.5, 0.2, 0.3])
-        led.dim_on(10, 3)
-        led.dim_off(2)
+    led = LED(*rgb_pins, pwm_frequency)    
 
-        GPIO.cleanup()
-    
-    except:
-        GPIO.cleanup()
+    led.setup()
+    led.set_color([252, 163, 28])
+    led.dim_on(10, 3)
+    led.dim_off(2)
+
+
