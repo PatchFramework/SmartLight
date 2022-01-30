@@ -25,6 +25,21 @@ The following software packages were used:
 - Flask -> Is used for the backend programming of the web server
 - Shortcuts -> Is used to have an implementation of this platform in the form of a smartphone app (Apple devices only)
 
+
+To measure the performance of the platform, functional and non-functional requirements have been defined.
+
+Functional requirements (Purpose and functions of the device)
+- At a defined time, the light should turn on
+- Turn on/off the clock
+- Set alarm clock time
+- Control via smartphone
+
+Non-functional requirements (How well does the device implement the functions)
+- Ease of use
+- Effectiveness (Brightness of the light)
+- Extensibility (Set many different alarms)
+- Functionality 
+
 ## Implementation 
 We use a Raspberry Pi 4 to controll a LED strip. (Any other Raspberry Pi model or an Arduino would also work, if you install a network antenna.) The Raspberry Pi hosts a REST API Server that exposes controlls for the LED Strip to the LAN. 
 
