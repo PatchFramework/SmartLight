@@ -2,9 +2,9 @@
 This project takes place as part of our lecture "Integrationsseminar" at DHBW Mannheim.
 
 The Team Members of this Project are:
-- Ann-Kathrin Kälberer
-- Canberk Alkan
-- Dominic Viola
+- Ann-Kathrin Kälberer (5799502)
+- Canberk Alkan (3275561)
+- Dominic Viola (1044258)
 
 ## Description
 This project focuses on the creation of a light alarm clock. It will integrate with pre-existing devices like a smartphone with a alarm clock capability. The purpose of the light alarm clock is to wake users naturally by first using ambient light and then ringing the alarm. 
@@ -26,7 +26,7 @@ The following software packages were used:
 - Shortcuts -> Is used to have an implementation of this platform in the form of a smartphone app (Apple devices only)
 
 
-To measure the performance of the platform, functional and non-functional requirements have been defined.
+To measure the performance of the platform, functional and non-functional requirements were defined.
 
 Functional requirements (Purpose and functions of the device)
 - At a defined time, the light should turn on
@@ -39,6 +39,12 @@ Non-functional requirements (How well does the device implement the functions)
 - Effectiveness (Brightness of the light)
 - Extensibility (Set many different alarms)
 - Functionality 
+
+Tasks can be devided in
+- Flask Webserver implementation: Ann-Kathrin Kälberer 
+- Logic of LED and GPIO Pins: Dominic Viola, Canberk Alkan
+- Presentation and Documentation: Canberk Alkan 
+
 
 ## Implementation 
 We use a Raspberry Pi 4 to controll a LED strip. (Any other Raspberry Pi model or an Arduino would also work, if you install a network antenna.) The Raspberry Pi hosts a REST API Server that exposes controlls for the LED Strip to the LAN. 
