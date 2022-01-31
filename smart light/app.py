@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.mysql import TIME
 
 # import the LED light controls
-from led import LED
+#from led import LED
 
 # constants to controll the LED
 BRIGHTNESS = 10 # out of 100
@@ -38,6 +38,7 @@ db = SQLAlchemy(app)
 
 # Database model that saves the alarm clocks
 class licht(db.Model):
+    ___tablename___ = 'licht'
     _id = db.Column("id", db.Integer, primary_key=True)
     # indicates if the alarm should be active or inactive
     active = db.Column("active", db.Boolean)
@@ -89,11 +90,13 @@ def lichtein():
         if licht == "lighton":
             session["licht"] = True
             # turn on the light
-            led.on(BRIGHTNESS)
+      #      led.on(BRIGHTNESS)
+            flash("Licht ist an!")
         elif licht == "lightoff":
             session["licht"] = False
             # turn off the light 
-            led.off()
+      #      led.off()
+            flash("Licht ist aus!")
 
         # we dont need to save the data that we turn the light on immediately 
         # try:
@@ -108,7 +111,7 @@ def lichtein():
         #     db.session.commit()
 
 
-        flash("Licht ist an!")
+       
         return redirect(url_for("lichtein"))
     else:
         # if "licht" in session: 
@@ -126,17 +129,15 @@ def weckerstellen():
         zeit = datetime.strptime(zeit, "%H:%M").time()
         print("Zeit", zeit)
 
-        #session["zeit"] = zeit
+        session["zeit"] = f"{zeit.hour}:{zeit.minute}"
         # found_wecker = licht.query.filter_by(zeit=zeit).first()
         found_wecker = None
 
-        if found_wecker:
-            # TODO: add to the found wecker, that it is set to active=True
-            session["zeit"] = found_wecker.zeit
-        else:
-            zeitpunkt = licht(active=True, zeit=zeit)
-            db.session.add(zeitpunkt)
-            db.session.commit()
+        
+        #session["zeit"]=zeit
+        zeitpunkt = licht(active=True, zeit=zeit)
+        db.session.add(zeitpunkt)
+        db.session.commit()
 
 
         flash("Wecker wurde erfolgreich gestellt!")
@@ -172,26 +173,54 @@ def lichtaus():
 
 @app.route("/loeschen", methods=["GET", "POST"])
 def weckerentfernen():
-    
-    if "zeit" in session:
-        zeit = session["zeit"]
+#der verzweifelte Versuch, irgendwas gebacken zu bekommen
+    # if request.method == "POST":
+    #     session.permanent = True
+    #     zeitloeschen = request.form.getlist("loeschen")
+    #     session["zeit"] = zeitloeschen
+    #     found_zeit = licht.query.filter_by(zeit=zeitloeschen).delete()
+    #     # db.session.delete(found_zeit)
+    #     db.session.commit()
+    #     flash(f"Wecker was deleted: {found_zeit}")
+    #     return render_template("weckerentfernen.html", values=zeitloeschen)
+    # else:
+    #     return render_template("weckerentfernen.html", info="Keine Wecker gefunden")
+
+#ursprünglicher Code
+    if session.get("zeit"):
+        
 
         if request.method == "POST":
-            session.permanent = True
-            return request.form.getlist['loeschen']
-            session["zeit"] = zeit
-            found_zeit = licht.query.filter_by(zeit=zeitloeschen).delete()
-           # db.session.delete(found_zeit)
-            db.session.commit()
-            flash(f"Wecker was deleted: {zeit}")
+            # session.permanent = True
+            # zeitloeschen = request.form.getlist("loeschen")
+            # session["zeit"] = zeitloeschen
+            # found_zeit = licht.query.filter_by(zeit=zeitloeschen).delete()
+            # db.session.delete(found_zeit)
+
+            zeitloeschen = request.form.getlist("loeschen")
+            wecker_list = licht.query.all()
+            for wecker in wecker_list:
+                wecker_string = f"{wecker.zeit.hour}:{wecker.zeit.minute}"
+                if wecker_string in zeitloeschen:
+                    wecker = datetime.strptime(wecker_string, "%H:%M").time()
+                   #db.session.delete(ItemModel.query.filter(ItemModel.time <= epoch_time).first())
+                    db.session.delete(licht.query.filter(licht.zeit == wecker).first())
+                    #delete(licht.zeit)
+                    db.session.commit()
+            # found_zeit = licht.query.filter_by(zeit=zeitloeschen).delete()
+            # db.session.delete(zeitloeschen)
+            # db.session.commit()
+            flash(f"Wecker was deleted: {wecker_string}")
+            return render_template("weckerentfernen.html")
+
         else:
             if "zeit" in session:
                 zeit = session["zeit"]
                 l = get_alarm_clocks()
                 return render_template("weckerentfernen.html", values=l)
-  
+    
     else:
-        flash("You are not logged in!")
+        flash("Es sind keine Wecker gestellt!")
         return redirect(url_for("weckerstellen"))
 @app.route("/test")
 def test():
@@ -289,8 +318,8 @@ if __name__ == "__main__":
     # define the used pins for the light bulbs
     rgb_pins = (17, 22, 24) 
     pwm_frequency = 50 # in Hz
-    led = LED(*rgb_pins, pwm_frequency)    
-    led.setup()
+   # led = LED(*rgb_pins, pwm_frequency)    
+  #  led.setup()
 
     # start the database and webserver
     db.create_all()
