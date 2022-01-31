@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.mysql import TIME
 
 # import the LED light controls
-#from led import LED
+from led import LED
 
 # constants to controll the LED
 BRIGHTNESS = 10 # out of 100
@@ -46,22 +46,31 @@ def home():
 
 @app.route("/licht", methods=["POST", "GET"])
 def lichtein():
+    licht_status=session["licht"]
+    if licht_status == True:
+        flash("Licht ist gerade an")
+    else: 
+        flash("Licht ist gerade aus")
     if request.method == "POST":
         session.permanent = True
+     
         licht = request.form["lichtschalter"]
-        
+        if licht ==[]:
+            flash("Bitte eine Auswahl treffen!")
         if licht == "lighton":
             session["licht"] = True
             # turn on the light
-   #         led.on(BRIGHTNESS)
+            led.on(BRIGHTNESS)
             flash("Licht ist an!")
+            return render_template("licht.html")
         elif licht == "lightoff":
             session["licht"] = False
             # turn off the light 
-   #         led.off()
-            flash("Licht ist aus!")
+            led.off()
+            flash("Licht ist aus!")      
+            return render_template("licht.html")
 
-        return redirect(url_for("lichtein"))
+     #   return redirect(url_for("lichtein"))
     else:
         # if "licht" in session: 
         #     flash("Licht ist bereits an!")
@@ -170,8 +179,8 @@ if __name__ == "__main__":
     # define the used pins for the light bulbs
     rgb_pins = (17, 22, 24) 
     pwm_frequency = 50 # in Hz
-#    led = LED(*rgb_pins, pwm_frequency)    
-#    led.setup()
+    led = LED(*rgb_pins, pwm_frequency)    
+    led.setup()
 
     # start the database and webserver
     db.create_all()
