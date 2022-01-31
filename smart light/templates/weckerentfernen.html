@@ -2,13 +2,13 @@
 {% block title %}Login Page{% endblock %}
 
 {% block content %}
-    <!-- {% with messages = get_flashed_messages() %}
+    {% with messages = get_flashed_messages() %}
         {% if messages %}
             {% for msg in messages %}
                 <p>{{msg}}</p>
             {% endfor %}
         {% endif %}
-    {% endwith %} -->
+    {% endwith %}
 <p>Welche Wecker sollen gelöscht werden?</p>
 <form method="post" action="#">
     {% for value in values %}
