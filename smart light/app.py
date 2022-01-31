@@ -210,8 +210,10 @@ def weckerentfernen():
             # found_zeit = licht.query.filter_by(zeit=zeitloeschen).delete()
             # db.session.delete(zeitloeschen)
             # db.session.commit()
+            wecker_list_neu = licht.query.all()
+            l = get_alarm_clocks()
             flash(f"Wecker was deleted: {wecker_string}")
-            return render_template("weckerentfernen.html")
+            return render_template("weckerentfernen.html", values=l)
 
         else:
             if "zeit" in session:
