@@ -75,6 +75,9 @@ def weckerstellen():
         #request.form["wecker"] == "weckerstellen"
         zeit = request.form.get("wecker")
         # convert zeit from format HH:MM to datetime format
+        if zeit == '':
+            flash("Es wurde keine Zeit eingestellt. Bitte erneut versuchen.")
+            return redirect(url_for("weckerstellen"))
         zeit = datetime.strptime(zeit, "%H:%M").time()
         print("Zeit", zeit)
 
@@ -110,6 +113,9 @@ def get_alarm_clocks():
 @app.route("/anzeige")
 def weckeranzeige():
     l = get_alarm_clocks()
+    if l == []:
+        flash("Es sind keine Wecker gestellt.")
+        # return redirect(url_for("weckerstellen"))
     return render_template("weckeranzeige.html", values=l)
 
 @app.route("/lichtaus")
@@ -130,15 +136,19 @@ def weckerentfernen():
             zeitloeschen = request.form.getlist("loeschen")
             #Wecker, die ausgewählt werden, werden gelöscht:
             wecker_list = licht.query.all()
+            if wecker_list==[]:
+                flash("Keine Wecker vorhanden! Es können keine Wecker gelöscht werden. ")
+                return redirect(url_for("weckerentfernen"))            
             for wecker in wecker_list:
                 wecker_string = f"{wecker.zeit.hour}:{wecker.zeit.minute}"
                 if wecker_string in zeitloeschen:
                     wecker = datetime.strptime(wecker_string, "%H:%M").time()
                     db.session.delete(licht.query.filter(licht.zeit == wecker).first())
                     db.session.commit()
+                    flash(f"Wecker wurde gelöscht: {wecker_string}")
                    #übrige Wecker werden in Wecker-Entfernen-Template angezeigt und können auch noch ausgewählt werden:
             l = get_alarm_clocks()
-            flash(f"Wecker was deleted: {wecker_string}")
+            
             return render_template("weckerentfernen.html", values=l)
 
         else:
