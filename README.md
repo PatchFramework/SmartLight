@@ -70,7 +70,7 @@ The [assets](assets) folder is meant for pictures and other materials that are i
 ### Setup for the backend
 Install the dependencies:
 ```bash
-pip install -r backend/requirements.txt
+pip install -r requirements.txt
 ```
 
 Start the server:
