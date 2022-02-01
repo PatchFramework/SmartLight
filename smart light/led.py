@@ -1,6 +1,7 @@
 import RPi.GPIO as GPIO
 import time
 
+GPIO.setwarnings(False)
 
 class LED():
     def __init__(self, R_pin, G_pin, B_pin, pwm_frequency):

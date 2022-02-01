@@ -1,43 +1,74 @@
 from flask import Flask,render_template,request,redirect,url_for,session,flash
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, date
+
+# database related imports
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import create_engine, Column, Boolean, Integer, Time
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.dialects.mysql import TIME
+
+from time import sleep
+import threading
 
 # import the LED light controls
 from led import LED
 
 # constants to controll the LED
+# maximal brightness of the alarm
 BRIGHTNESS = 10 # out of 100
+# slowly dim the light on over this duration
 DIM_DURATION = 4 # seconds
+# check the database for alarms every x seconds
+CHECK_DB_INTERVALL = 60 # seconds
+# if the light alarm goes off, keep the light on for this duration
+STAY_ON_DURATION = 10 # seconds
+# dim the light to BRIGHTNESS over the duration of x seconds
+DIM_ON_DURATION = 10 # seconds
+# dim the light off over the duration of x seconds
+DIM_OFF_DURATION = 3 # seconds
+
+
+#############################
+##### webserver config ######
+#############################
 
 app = Flask(__name__)
 app.secret_key = "hello"
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite://'
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
-
 app.permanent_session_lifetime = timedelta(days=5)
- 
-db = SQLAlchemy(app)
 
+#############################
+###### Database config ######
+#############################
 
-# Database model that saves the alarm clocks
-class licht(db.Model):
-    ___tablename___ = 'licht'
-    _id = db.Column("id", db.Integer, primary_key=True)
+# create a db session that can be called from multiple threads
+engine = create_engine('sqlite:///wecker.db', echo=True)
+db = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
+Base = declarative_base()
+Base.query = db.query_property()
+
+# Database model that is used to save and read the alarm clocks
+class licht(Base):
+    __tablename__ = 'licht'
+    _id = Column("id", Integer, primary_key=True)
     # indicates if the alarm should be active or inactive
-    active = db.Column("active", db.Boolean)
+    active = Column("active", Boolean)
     # time at which the clock alarm should go off
-    zeit = db.Column("zeit", db.Time)
+    zeit = Column("zeit", Time)
 
     def __init__(self, active=True, zeit=None):
         self.licht = active
         self.zeit = zeit
 
+# gracefully shutdown the database on webserver shutdown
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    db.remove()
 
-# use this var to check whether the LED is on or off at the moment
-# if light is off = False; if light is on = True
-# session["licht"] = False
+
+#############################
+##### webserver routes ######
+#############################
 
 # redirect to the licht endpoint by default
 @app.route("/", methods=["POST", "GET"])
@@ -46,7 +77,7 @@ def home():
 
 @app.route("/licht", methods=["POST", "GET"])
 def lichtein():
-    licht_status=session["licht"]
+    licht_status=session.get("licht")
     if licht_status == True:
         flash("Licht ist gerade an")
     else: 
@@ -97,8 +128,9 @@ def weckerstellen():
         
         #session["zeit"]=zeit
         zeitpunkt = licht(active=True, zeit=zeit)
-        db.session.add(zeitpunkt)
-        db.session.commit()
+        # keep in mind that db is the session with the db
+        db.add(zeitpunkt)
+        db.commit()
 
 
         flash("Wecker wurde erfolgreich gestellt!")
@@ -109,12 +141,16 @@ def weckerstellen():
         #     return redirect(url_for("weckeranzeige"))
         return render_template("wecker.html")
 
-def get_alarm_clocks():
-        # get all available alarms
-    licht_list = licht.query.all()
+def get_alarm_clocks(str_format=True, threadsave_db_session=db):
+    # get all available alarms
+    licht_list = threadsave_db_session.query(licht).all()
     if licht_list is not None:
-        # Format the alarms in hours and minutes only
-        l = [f"{licht.zeit.hour}:{licht.zeit.minute}" for licht in licht_list]
+        if str_format:
+            # Format the alarms in hours and minutes only
+            l = [f"{licht.zeit.hour}:{licht.zeit.minute}" for licht in licht_list]
+        else:
+            # datetime.time() object; not formatted as a string 
+            l = [licht.zeit for licht in licht_list]
         return l
     else:
         return
@@ -152,8 +188,8 @@ def weckerentfernen():
                 wecker_string = f"{wecker.zeit.hour}:{wecker.zeit.minute}"
                 if wecker_string in zeitloeschen:
                     wecker = datetime.strptime(wecker_string, "%H:%M").time()
-                    db.session.delete(licht.query.filter(licht.zeit == wecker).first())
-                    db.session.commit()
+                    db.delete(licht.query.filter(licht.zeit == wecker).first())
+                    db.commit()
                     flash(f"Wecker wurde gelöscht: {wecker_string}")
                    #übrige Wecker werden in Wecker-Entfernen-Template angezeigt und können auch noch ausgewählt werden:
             l = get_alarm_clocks()
@@ -169,13 +205,54 @@ def weckerentfernen():
     else:
         flash("Es sind keine Wecker gestellt!")
         return redirect(url_for("weckerstellen"))
-@app.route("/test")
-def test():
-    return render_template("new.html", content="Testing")
-    
-if __name__ == "__main__":
-    # initialize the led controls
 
+#############################
+##### Utility functions #####
+#############################
+
+def equal_time_obj(t1, t2):
+    """
+    Takes two datetime.time objects and returns true if they are 
+    identical in HH:mm format. seconds and microseconds are ignored.
+    """
+    # truncate time to hour and minutes only; remove seconds and microseconds
+    t1_trunc = t1.replace(second=0, microsecond=0)
+    t2_trunc = t2.replace(second=0, microsecond=0) 
+    return t1_trunc == t2_trunc
+
+# asynchronous background thread that checks if alarms are due 
+def check_alarm_every_dt(dt=CHECK_DB_INTERVALL):
+    while True:
+        # try to receive the current alarm clocks
+        # get all alarm clocks as datetime.time() objects
+        alarms = get_alarm_clocks(str_format=False, threadsave_db_session=db)
+        print("Checking alarms in the database:", alarms)
+
+        if alarms is not None:
+            current_time = datetime.now().time()
+            for time in alarms:
+                # ring if the alarm is equal to the current time in HH:mm format
+                ring = equal_time_obj(current_time, time)
+                
+                # if one of the alarms is due
+                if ring:
+                    print("Ringing alarm", time, "at", current_time)
+                    led.dim_on(BRIGHTNESS, DIM_ON_DURATION)
+                    sleep(STAY_ON_DURATION)
+                    led.dim_off(DIM_OFF_DURATION)
+        # wait one time intervall
+        sleep(dt)
+
+#############################
+####### Main function #######
+#############################
+
+if __name__ == "__main__":
+    # start the backgound thread that activates the light if an alarm should go off
+    b = threading.Thread(name="background", target=check_alarm_every_dt)
+    b.start()
+
+    # initialize the led controls
     # define the used pins for the light bulbs
     rgb_pins = (17, 22, 24) 
     pwm_frequency = 50 # in Hz
@@ -183,5 +260,5 @@ if __name__ == "__main__":
     led.setup()
 
     # start the database and webserver
-    db.create_all()
+    Base.metadata.create_all(bind=engine)
     app.run(debug=True)
