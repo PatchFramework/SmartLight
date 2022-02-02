@@ -43,7 +43,7 @@ Non-functional requirements (How well does the device implement the functions)
 - Functionality 
 
 Tasks can be devided in
-- Flask Webserver implementation: Ann-Kathrin Kälberer 
+- Flask Webserver implementation: Ann-Kathrin Kälberer, Dominic Viola
 - Logic of LED and GPIO Pins: Dominic Viola, Canberk Alkan
 - Presentation and Documentation: Canberk Alkan 
 
@@ -56,6 +56,7 @@ The alarm clock application of a Smartphone will serve as a trigger, that sends 
 ![architecture](assets/implementation_architecture.png)
 
 ---
+
 ## Developer Notes
 
 <br>
@@ -72,14 +73,14 @@ Contains the flask webserver [app.py](./smart_light/app.py), that also exposes a
 
 This file can be imported to Apple iPhone and iPad to use it with the [Shortcuts app](https://support.apple.com/en-gb/guide/shortcuts/welcome/ios). Just download the file to one of those devices and open it. It will enable you to set your devices alarm clock to a specific time and it will also send a HTTP request to the API Server. Your devices alarm will ring together with the light alarm. 
 
-<p>
-  <img src="assets/import_shortcut.png" width="150" />
-  <img src="assets/shortcut_set_alarm.png" width="150" /> 
-  <img src="assets/shortcut_done.png" width="150" />
+<p align="center">
+  <img src="assets/import_shortcut.PNG" width="250" />
+  <img src="assets/shortcut_set_alarm.PNG" width="250" /> 
+  <img src="assets/shortcut_done.PNG" width="250" />
 </p>
 
 
-> NOTE: You need to change the IP-adresse to the IP-Address of the Raspberry Pi in your local network. (Run ```$ifconfig``` on your Raspberry Pi.)
+> NOTE: You need to change the IP-address inside the shortcut to the IP-address of the Raspberry Pi in your local network. (Run ```$ifconfig``` on your Raspberry Pi to get the IP-address.)
 
 3. Folder: [Backend](backend)
 
