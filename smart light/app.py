@@ -1,5 +1,5 @@
-from flask import Flask,render_template,request,redirect,url_for,session,flash
-from datetime import timedelta, datetime, date
+from flask import Flask,render_template,request,Response,redirect,url_for,session,flash
+from datetime import timedelta, datetime, date, time
 
 # database related imports
 from flask_sqlalchemy import SQLAlchemy
@@ -20,7 +20,7 @@ BRIGHTNESS = 10 # out of 100
 # slowly dim the light on over this duration
 DIM_DURATION = 4 # seconds
 # check the database for alarms every x seconds
-CHECK_DB_INTERVALL = 60 # seconds
+CHECK_DB_INTERVALL = 59 # seconds
 # if the light alarm goes off, keep the light on for this duration
 STAY_ON_DURATION = 10 # seconds
 # dim the light to BRIGHTNESS over the duration of x seconds
@@ -207,6 +207,30 @@ def weckerentfernen():
         return redirect(url_for("weckerstellen"))
 
 #############################
+### REST API functionality ##
+#############################
+@app.route("/api/set/<alarm_time>", methods=["POST"])
+def set_alarm(alarm_time):
+    if request.method == "POST":
+        print("Received alarm time:", alarm_time)
+        # try to convert the value to a datetime.time() object
+        try:
+            t = datetime.strptime(alarm_time, "%H-%M").time()
+        except:
+            print("Bad Request: Failed to transform value", alarm_time, "to datetime.time() object")
+            return Response(400)
+        # try to write the alarm into the database
+        try:
+            new_alarm = licht(zeit=t)
+            db.add(new_alarm)
+            db.commit()
+        except:
+            print("Internal Server error: Could not write object",t, "into table licht of the database")
+            return Response(500)
+        # if everything got through return HTTP code for ok
+        return Response(200)
+
+#############################
 ##### Utility functions #####
 #############################
 
@@ -261,4 +285,4 @@ if __name__ == "__main__":
 
     # start the database and webserver
     Base.metadata.create_all(bind=engine)
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
