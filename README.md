@@ -30,17 +30,14 @@ The following software packages were used:
 
 To measure the performance of the platform, functional and non-functional requirements were defined.
 
-Functional requirements (Purpose and functions of the device)
-- At a defined time, the light should turn on
-- Turn on/off the clock
-- Set alarm clock time
-- Control via smartphone
 
-Non-functional requirements (How well does the device implement the functions)
-- Ease of use
-- Effectiveness (Brightness of the light)
-- Extensibility (Set many different alarms)
-- Functionality 
+| Functional Requirements | Non-Functional Requirements |
+| ----------------------- | --------------------------- |
+| At a defined time, the light should turn on | Ease of use |
+| Turn on/off the light | Effectiveness (Brightness of the light) |
+| Set alarm clock time | Extensibility (Set many different alarms) |
+| Control via smartphone | Functionality |
+
 
 Tasks can be devided in
 - Flask Webserver implementation: Ann-Kathrin Kälberer, Dominic Viola
@@ -55,11 +52,8 @@ The alarm clock application of a Smartphone will serve as a trigger, that sends 
 
 ![architecture](assets/implementation_architecture.png)
 
----
 
 ## Developer Notes
-
-<br>
 
 ### Folders and Files
 
