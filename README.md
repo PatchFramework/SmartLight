@@ -33,10 +33,10 @@ To measure the performance of the platform, functional and non-functional requir
 
 | Functional Requirements | Non-Functional Requirements |
 | ----------------------- | --------------------------- |
-| At a defined time, the light should turn on | Ease of use |
+| At a defined time, the light should turn on | Usability / Functionality |
 | Turn on/off the light | Effectiveness (Brightness of the light) |
 | Set alarm clock time | Extensibility (Set many different alarms) |
-| Control via smartphone | Functionality |
+| Control via smartphone | Security |
 
 
 Tasks can be devided in
